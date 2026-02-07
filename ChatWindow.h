@@ -66,29 +66,28 @@ public:
 };
 class OnlineUsers {
 public:
-    std::vector<std::string> names;
+    std::vector<std::pair<std::string, bool>> users;
     OnlineUsers(std::string userName) { addUser(userName); }
     void addUser(const std::string& name) {
-        names.push_back(name);
+        users.push_back(std::pair<std::string, bool>(name, false));
     }
     void eraseUser(const std::string& name) {
 
-        auto it = std::find(names.begin(), names.end(), name);
-        if (it != names.end()) {
-            names.erase(it);
+        auto it = std::find_if(users.begin(), users.end(), [&](const auto& p) { return p.first == name; });
+        if (it != users.end()) {
+            users.erase(it);
         }
         else {
             std::cout << "user doesnt exist!" << std::endl;
         }
-
     }
     void getUserList(std::string msg) {
         std::stringstream ss(msg);
-        std::string item;
-        while (std::getline(ss, item, '#')) {
-            if (!item.empty()) {
-                names.push_back(item);
-                std::cout << item << std::endl;
+        std::string name;
+        while (std::getline(ss, name, '#')) {
+            if (!name.empty()) {
+                users.push_back(std::pair<std::string, bool>(name, false));
+                std::cout << name << std::endl;
             }
         }
     }
@@ -123,7 +122,8 @@ public:
         hasChildWindow = false;
         std::cout << "close dm window" << std::endl;
     }
-    void drawIcon(const std::string& name) {
+    //void drawIcon(const std::string& name) {
+    void drawIcon(const std::pair<std::string, bool>& user) {
         static ImU32 userColor = IM_COL32(215, 215, 215, 255);
         static ImU32 normalColor = IM_COL32(70, 70, 70, 255);
         static ImU32 activeColor = IM_COL32(23, 77, 227, 255);
@@ -133,10 +133,12 @@ public:
         const static ImVec4 iconText = ImVec4(0.05882f * 0.6, 0.20000f * 0.6, 0.36863f * 0.6, 1.f);//39, 56, 30
         ImVec2 size(35, 35);
         bool clicked = false;
-        std::string id = name;//"##" can make a unique id
+
+        std::string id = user.first;//"##" can make a unique id
         if (ImGui::InvisibleButton(id.c_str(), size)) {
             clicked = !clicked;
         }
+
         bool hovered = ImGui::IsItemHovered();
 
         ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -145,9 +147,9 @@ public:
 
         ImU32 fill;
         if (!hovered) {
-            if (name == dmTarget)
+            if (user.first == dmTarget)
                 fill = activeColor;
-            else if (name == username)
+            else if (user.first == username)
                 fill = userColor;
             else
                 fill = normalColor;
@@ -158,24 +160,24 @@ public:
 
         if (clicked) {
             fill = IM_COL32(255, 255, 255, 255);
-            std::cout << "Clicked on user: " << name << std::endl;
+            std::cout << "Clicked on user: " << user.first << std::endl;
             //we can do DM function here, for example, open a new chat window with this user
-            if (name == dmTarget || name == username) {
+            if (user.first == dmTarget || user.first == username) {
                 closeDmWindow();
             }
             else {
-                openDmWindow(name);
+                openDmWindow(user.first);
             }
         }
 
         dl->AddRectFilled(p0, p1, fill, 4.0f);
         dl->AddRect(p0, p1, hoveredColor, 4.0f, 0, 1.0f);
 
-        ImGui::SetItemTooltip(name.c_str());
+        ImGui::SetItemTooltip(user.first.c_str());
 
         //add name
         char name2[3];
-        name2[0] = name[0]; name2[1] = name[1]; name2[2] = '\0';
+        name2[0] = user.first[0]; name2[1] = user.first[1]; name2[2] = '\0';
         const char* text = name2;
         ImVec2 text_size = ImGui::CalcTextSize(text);
         ImVec2 center = ImVec2(
@@ -183,6 +185,19 @@ public:
             p0.y + (size.y - text_size.y) * 0.5f
         );
         dl->AddText(center, IM_COL32(255, 255, 255, 255), text);
+
+        //add unread sign
+        if (user.second == true) {
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            float radius = 5.0f;
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            draw_list->AddCircleFilled(
+                ImVec2(pos.x + 40, pos.y - 35),
+                radius,
+                IM_COL32(255, 50, 50, 255)
+            );
+        }
+        
     }
     bool verifySendUser(std::string sendUser, std::string& msg) {//sendUser, & client.receiveMessage
         int pos1 = msg.find('#');

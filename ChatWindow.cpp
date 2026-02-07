@@ -433,9 +433,9 @@ void ChatWindow::render(Client& client, bool& hasName) {
             if (ImGui::BeginChild("OnlineUsers"), ImVec2(90, 500), false, child_flags) {
                 ImGui::Text("users:");
                 
-                for (int i = 0; i < users.names.size(); i++) {
+                for (int i = 0; i < users.users.size(); i++) {
                     ImGui::SetCursorPosX(7);
-                    drawIcon(users.names[i]);
+                    drawIcon(users.users[i]);
                 }
             }
             ImGui::EndChild();
@@ -444,6 +444,10 @@ void ChatWindow::render(Client& client, bool& hasName) {
             //open a new window if "hasChildWindow" == true
             //if (true) {//for now
             if (hasChildWindow) {
+                auto it = std::find_if(users.users.begin(), users.users.end(), [&](const auto& p) { return p.first == dmTarget; });
+                if (it != users.users.end()) {
+                    it->second = false;
+                }
                 static ImVec2 childPos = { 570, 50 };
                 static ImVec2 childSize = { 450, 600 };
                 static bool childNeedScroll = false;
@@ -552,13 +556,19 @@ void ChatWindow::render(Client& client, bool& hasName) {
                         else {
                             //check whether it is a private msg----  sendUser = jamie ; client.receiveMessage = #jamie#hello
                             if (verifySendUser(sendUser, client.receiveMessage)) {
-                                //addMessage("test", sendUser, false, 1, sendUser);
                                 addMessage(client.receiveMessage, sendUser, false, 1, sendUser);
+                                
+                                for (auto& p : users.users) {
+                                    if (p.first == sendUser) {
+                                        p.second = true;
+                                        break;
+                                    }
+                                }
+
+
                                 Sound::getInstance().play();
                             }
-                        }
-                        
-                        
+                        }                      
                     }
                 }
 

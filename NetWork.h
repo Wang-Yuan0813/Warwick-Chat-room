@@ -5,11 +5,15 @@
 #include <thread>
 #include <string>
 #include <Windows.h>//need put it under winsock2.h...  :(
+#include <mutex>
 #pragma comment(lib, "ws2_32.lib")
 #define DEFAULT_BUFFER_SIZE 512
 
+//
+
 class Client {
 public:
+    static std::mutex mutexlock;
     bool login = false;
     bool sameName = false;
     //bool sendAll = true;
@@ -64,41 +68,17 @@ public:
             std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
             return false;
         }
-        /*int framecount = 10000;
-        while (framecount > 0) {
-            framecount--;
-            if (login) {
-                return true;
-            }
-        }*/
+
         return false;
-        //while (true) {
-        //    char buffer[DEFAULT_BUFFER_SIZE] = { 0 };
-        //    int bytes_received = recv(client_socket, buffer, DEFAULT_BUFFER_SIZE - 1, 0);
-        //    if (bytes_received > 0) {
-        //        buffer[bytes_received] = '\0'; // Null-terminate the received data
-        //        std::string recv = std::string(buffer);
-        //        std::cout << recv << std::endl;
-        //        if (recv == "#system:Welcome-" + id) return true;
-        //        else return false;
-        //    }
-        //    else if (bytes_received == 0) {
-        //        std::cout << "\nConnection closed by server." << std::endl;
-        //        return false;
-        //    }
-        //    else {
-        //        std::cerr << "\nReceive failed with error: " << WSAGetLastError() << std::endl;
-        //        return false;
-        //    }
-        //}
-        return true;
     }
     void startReceive() {
         std::thread receiveThread([this] {
             while (true) {
+
                 char buffer[DEFAULT_BUFFER_SIZE] = { 0 };
                 int bytes_received = recv(client_socket, buffer, DEFAULT_BUFFER_SIZE - 1, 0);
                 if (bytes_received > 0) {
+                    //std::lock_guard<std::mutex> lk(mutexlock);
                     buffer[bytes_received] = '\0'; // Null-terminate the received data
                     receiveMessage = std::string(buffer);
                     receiveNew = true;//use bool to notify window.
@@ -129,8 +109,8 @@ public:
 
         std::thread sendThread([this] {
             while (true) {
-                //std::cout << "thread is working" << std::endl;
                 if (inputNew) {
+                    //std::lock_guard<std::mutex> lk(mutexlock);
                     std::cout << "Client send message: " << sendMessage << std::endl;
                     inputNew = false;
                     if (send(client_socket, sendMessage.c_str(), static_cast<int>(sendMessage.size()), 0) == SOCKET_ERROR) {
