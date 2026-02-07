@@ -566,7 +566,7 @@ void ChatWindow::render(Client& client, bool& hasName) {
                                 }
 
 
-                                Sound::getInstance().play();
+                                Sound::getInstance().playDM();
                             }
                         }                      
                     }

@@ -12,7 +12,6 @@
 #include <tchar.h>
 #include <vector>
 #include <sstream>
-
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include <cmath>
@@ -237,11 +236,19 @@ public:
         static Sound instance; // Lazy initialisation
         return instance;
     }
-    void play() {
-        std::cout << "sound play" << std::endl;
+    /*void play() {
         system->playSound(sound, NULL, false, NULL);
+    }*/
+
+    void play(float volume = 0.1f) {
+        system->playSound(sound, nullptr, false, &channel);
+        if (channel) channel->setVolume(volume);
     }
 
+    void playDM(float volume = 0.05f) {
+        system->playSound(soundDM, nullptr, false, &channel);
+        if (channel) channel->setVolume(volume);
+    }
     void update() {
         system->update();
     }
@@ -249,13 +256,16 @@ public:
 private:
     FMOD::System* system = NULL;
     FMOD::Sound* sound = NULL;
-    //FMOD::Channel* channel = NULL;
+    FMOD::Sound* soundDM = NULL;
+    FMOD::Channel* channel = NULL;
     //Sound() = default; // Private constructor
     Sound() {
         //FMOD::System* system;
         FMOD::System_Create(&system);
         system->init(512, FMOD_INIT_NORMAL, NULL);
         system->createSound("pop.mp3", FMOD_DEFAULT, NULL, &sound);
+        system->createSound("popDM.mp3", FMOD_DEFAULT, NULL, &soundDM);
+
     }
     ~Sound() {
         system->close();
