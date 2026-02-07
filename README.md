@@ -22,3 +22,5 @@ The chat window also supports auto‑scrolling, ensuring that the public chat vi
 <p align="left">
   <img src="https://github.com/Wang-Yuan0813/Warwick-Chat-room/raw/master/Examples/autoscroll.gif" width="300">
 </p>
+
+(The assignment requires private chats to open in a separate window, so I had to make the background panel larger. Otherwise, the UI could have been more minimalistic and cleaner.)
